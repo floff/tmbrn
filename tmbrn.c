@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include <dirent.h>
+#include <ctype.h>
 
 
 const char CHARS_HEX[/*22 + 1*/]	= "0123456789ABCDEFabcdef";
@@ -13,14 +14,12 @@ int is_hex(const char str[])
 {
 	int i, j;
 	for(i=0; str[i]!='\0'; i++) {
-		for(j=0; str[j]!='\0'; j++) {
-			if(str[i] == CHARS_HEX[j]) {
-				return str[i];
-			}
+		if(!isxdigit(str[i])) {
+			return 0;
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
 int bulk_rename(const char dir[])
@@ -44,7 +43,7 @@ int bulk_rename(const char dir[])
 			strcpy(filename_buf, pdir_info->d_name);
 			*(filename_buf + filename_len - 4) = '\0';
 
-			if(is_hex((filename_buf + filename_len - 12)) != 0) {
+			if(is_hex((filename_buf + filename_len - 12))) {
 				if(*(filename_buf + filename_len - 13) == '_') {
 					*(filename_buf + filename_len - 13) = '\0';
 
