@@ -40,13 +40,13 @@ int bulk_rename(const char dir[])
 
 	while ((pdir_info = readdir(pdir_entry)) != NULL) {
 		filename_len = strlen(pdir_info->d_name);
-		if(strcmp((pdir_info->d_name + filename_len - 4), ".map") == 0) {
+		if(filename_len > 13 && strcmp((pdir_info->d_name + filename_len - 4), ".map") == 0) {
 			strcpy(filename_buf, pdir_info->d_name);
 			*(filename_buf + filename_len - 4) = '\0';
 
-			if(is_hex((filename_buf + filename_len - 4 - 8)) != 0) {
-				if(*(filename_buf + filename_len - 4 - 8 - 1) == '_') {
-					*(filename_buf + filename_len - 4 - 8 - 1) = '\0';
+			if(is_hex((filename_buf + filename_len - 12)) != 0) {
+				if(*(filename_buf + filename_len - 13) == '_') {
+					*(filename_buf + filename_len - 13) = '\0';
 
 					dirname_len = strlen(dir);
 
