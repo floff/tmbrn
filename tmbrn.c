@@ -27,7 +27,7 @@ int bulk_rename(const char dir[])
 {
 	DIR *pdir_entry;
 	struct dirent *pdir_info;
-	char filename_buf[256], fullname_buf[512], rn_buf[512];
+	char filename_buf[256], oldname_buf[512], newname_buf[512];
 	size_t filename_len, dirname_len;
 	FILE *pfile;
 
@@ -38,7 +38,7 @@ int bulk_rename(const char dir[])
 		return 1;
 	}
 
-	while ((pdir_info = readdir(pdir_entry)) != NULL) {
+	while((pdir_info = readdir(pdir_entry)) != NULL) {
 		filename_len = strlen(pdir_info->d_name);
 		if(filename_len > 13 && strcmp((pdir_info->d_name + filename_len - 4), ".map") == 0) {
 			strcpy(filename_buf, pdir_info->d_name);
@@ -50,36 +50,36 @@ int bulk_rename(const char dir[])
 
 					dirname_len = strlen(dir);
 
-					/* original filename */
-					strcpy(fullname_buf, dir);
+					/* old filename */
+					strcpy(oldname_buf, dir);
 
 					if(dir[dirname_len - 1] != '/') {
-						strcat(fullname_buf, "/");
+						strcat(oldname_buf, "/");
 					}
 
-					strcat(fullname_buf, pdir_info->d_name);
+					strcat(oldname_buf, pdir_info->d_name);
 
 					/* new filename */
-					strcpy(rn_buf, dir);
+					strcpy(newname_buf, dir);
 
 					if(dir[dirname_len - 1] != '/') {
-						strcat(rn_buf, "/");
+						strcat(newname_buf, "/");
 					}
 
-					strcat(rn_buf, filename_buf);
-					strcat(rn_buf, ".map");
+					strcat(newname_buf, filename_buf);
+					strcat(newname_buf, ".map");
 
-					pfile = fopen(rn_buf, "r");
+					pfile = fopen(newname_buf, "rb");
 					if(pfile == NULL) {
-						if(rename(fullname_buf, rn_buf) == 0) {
-							printf("%s -> %s\n", fullname_buf, rn_buf);
+						if(rename(oldname_buf, newname_buf) == 0) {
+							printf("tmbrn: %s -> %s\n", oldname_buf, newname_buf);
 						}
 						else {
-							printf("*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), fullname_buf, rn_buf);
+							printf("*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), oldname_buf, newname_buf);
 						}
 					}
 					else {
-						printf("*** error (!NULL, fopen()): file exists: \'%s\'\n", rn_buf);
+						printf("*** error (!NULL, fopen()): file exists: \'%s\'\n", newname_buf);
 						fclose(pfile);
 					}
 				}
