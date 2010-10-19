@@ -3,20 +3,19 @@
 #include <stdio.h>
 #include <errno.h>
 
+extern int errno;
+
 #include <unistd.h>
+#include <sys/types.h>
 #include <dirent.h>
 
-
-const char CHARS_HEX[/*22 + 1*/]	= "0123456789ABCDEFabcdef";
 
 int is_hex(const char str[])
 {
 	int i, j;
 	for(i=0; str[i]!='\0'; i++) {
-		for(j=0; str[j]!='\0'; j++) {
-			if(str[i] == CHARS_HEX[j]) {
-				return str[i];
-			}
+		if(isxdigit(str[i]) == 0) {
+			return str[i];
 		}
 	}
 
@@ -40,47 +39,49 @@ int bulk_rename(const char dir[])
 
 	while((pdir_info = readdir(pdir_entry)) != NULL) {
 		filename_len = strlen(pdir_info->d_name);
-		if(filename_len > 13 && strcmp((pdir_info->d_name + filename_len - 4), ".map") == 0) {
-			strcpy(filename_buf, pdir_info->d_name);
-			*(filename_buf + filename_len - 4) = '\0';
+		if(pdir_info->d_type & 8 && filename_len > 13) {
+			if(strcmp((pdir_info->d_name + filename_len - 4), ".map") == 0) {
+				strcpy(filename_buf, pdir_info->d_name);
+				*(filename_buf + filename_len - 4) = '\0';
 
-			if(is_hex((filename_buf + filename_len - 12)) != 0) {
-				if(*(filename_buf + filename_len - 13) == '_') {
-					*(filename_buf + filename_len - 13) = '\0';
+				if(is_hex((filename_buf + filename_len - 12)) == 0) {
+					if(*(filename_buf + filename_len - 13) == '_') {
+						*(filename_buf + filename_len - 13) = '\0';
 
-					dirname_len = strlen(dir);
+						dirname_len = strlen(dir);
 
-					/* old filename */
-					strcpy(oldname_buf, dir);
+						/* old filename */
+						strcpy(oldname_buf, dir);
 
-					if(dir[dirname_len - 1] != '/') {
-						strcat(oldname_buf, "/");
-					}
+						if(dir[dirname_len - 1] != '/') {
+							strcat(oldname_buf, "/");
+						}
 
-					strcat(oldname_buf, pdir_info->d_name);
+						strcat(oldname_buf, pdir_info->d_name);
 
-					/* new filename */
-					strcpy(newname_buf, dir);
+						/* new filename */
+						strcpy(newname_buf, dir);
 
-					if(dir[dirname_len - 1] != '/') {
-						strcat(newname_buf, "/");
-					}
+						if(dir[dirname_len - 1] != '/') {
+							strcat(newname_buf, "/");
+						}
 
-					strcat(newname_buf, filename_buf);
-					strcat(newname_buf, ".map");
+						strcat(newname_buf, filename_buf);
+						strcat(newname_buf, ".map");
 
-					pfile = fopen(newname_buf, "rb");
-					if(pfile == NULL) {
-						if(rename(oldname_buf, newname_buf) == 0) {
-							printf("tmbrn: %s -> %s\n", oldname_buf, newname_buf);
+						pfile = fopen(newname_buf, "rb");
+						if(pfile == NULL) {
+							if(rename(oldname_buf, newname_buf) == 0) {
+								printf("tmbrn: %s -> %s\n", oldname_buf, newname_buf);
+							}
+							else {
+								printf("*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), oldname_buf, newname_buf);
+							}
 						}
 						else {
-							printf("*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), oldname_buf, newname_buf);
+							printf("*** error (!NULL, fopen()): file exists: \'%s\'\n", newname_buf);
+							fclose(pfile);
 						}
-					}
-					else {
-						printf("*** error (!NULL, fopen()): file exists: \'%s\'\n", newname_buf);
-						fclose(pfile);
 					}
 				}
 			}
