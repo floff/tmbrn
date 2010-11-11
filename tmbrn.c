@@ -10,13 +10,14 @@ extern int errno;
 #include <dirent.h>
 
 
-int is_hex(const char str[])
+int is_hex(const char *str)
 {
-	int i, j;
-	for(i=0; str[i]!='\0'; i++) {
-		if(isxdigit(str[i]) == 0) {
-			return str[i];
+	while(str != '\0') {
+		if(isxdigit(*str) == 0) {
+			return *str;
 		}
+
+		str++;
 	}
 
 	return 0;
