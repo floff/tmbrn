@@ -30,12 +30,13 @@ int bulk_rename(const char dir[])
 	char filename_buf[256], oldname_buf[512], newname_buf[512];
 	size_t filename_len, dirname_len;
 	FILE *pfile;
+	int cnt = 0;
 
 	pdir_entry = opendir(dir);
 	if(pdir_entry == NULL) {
-		printf("*** error (%d, opendir()): %s\n", errno, strerror(errno));
+		fprintf(stderr, "*** error (%d, opendir()): %s\n", errno, strerror(errno));
 
-		return 1;
+		return -1;
 	}
 
 	while((pdir_info = readdir(pdir_entry)) != NULL) {
@@ -76,11 +77,12 @@ int bulk_rename(const char dir[])
 								printf("tmbrn: %s -> %s\n", oldname_buf, newname_buf);
 							}
 							else {
-								printf("*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), oldname_buf, newname_buf);
+								fprintf(stderr, "*** error (%d, rename()): %s: \'%s\' -> \'%s\'\n", errno, strerror(errno), oldname_buf, newname_buf);
+								cnt++;
 							}
 						}
 						else {
-							printf("*** error (!NULL, fopen()): file exists: \'%s\'\n", newname_buf);
+							fprintf(stderr, "*** error (!NULL, fopen()): file exists: \'%s\'\n", newname_buf);
 							fclose(pfile);
 						}
 					}
@@ -90,23 +92,35 @@ int bulk_rename(const char dir[])
 	}
 
 	closedir(pdir_entry);
-	return 0;
+	return cnt;
 }
 
 int main(int argc, char* argv[])
 {
 	char dir_buf[256];
+	int cnt;
+
 	if(argc > 1) {
-		bulk_rename(argv[1]);
+		cnt = bulk_rename(argv[1]);
+		if(cnt < 0) {
+			exit(EXIT_FAILURE);
+		}
+
+		printf("\nrenamed %d files\n", cnt);
 	}
 	else {
 		if(getcwd(dir_buf, 256) == NULL) {
-			printf("*** error (%d, getcwd()): %s\n", errno, strerror(errno));
+			fprintf(stderr, "*** error (%d, getcwd()): %s\n", errno, strerror(errno));
 
-			return 1;
+			exit(EXIT_FAILURE);
 		}
 
-		bulk_rename(dir_buf);
+		cnt = bulk_rename(dir_buf);
+		if(cnt < 0) {
+			exit(EXIT_FAILURE);
+		}
+
+		printf("\nrenamed %d files\n", cnt);
 	}
 
 	exit(EXIT_SUCCESS);
