@@ -12,7 +12,7 @@ extern int errno;
 
 int is_hex(const char *str)
 {
-	while(str != '\0') {
+	while(*str != '\0') {
 		if(isxdigit(*str) == 0) {
 			return *str;
 		}
